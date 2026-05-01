@@ -3,14 +3,14 @@
 </p>
 
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Montserrat&weight=500&size=22&pause=1200&color=D4AF37&center=true&vCenter=true&width=900&lines=The+security+agent+that+gets+smarter+every+time+it+runs.;47+learnings+from+production+audits.+Zero+false+positives.;Diagnosis+only.+Because+the+agent+that+finds+it+shouldn't+fix+it." alt="Michael tagline" />
+  <img src="https://readme-typing-svg.demolab.com?font=Montserrat&weight=500&size=22&pause=1200&color=D4AF37&center=true&vCenter=true&width=900&lines=The+security+agent+that+gets+smarter+every+time+it+runs.;46+learnings+from+production+audits.+Zero+false+positives.;Diagnosis+only.+Because+the+agent+that+finds+it+shouldn't+fix+it." alt="Michael tagline" />
 </p>
 
 <p align="center">
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-D4AF37?style=flat" alt="License: Apache 2.0" /></a>
   <img src="https://img.shields.io/badge/Claude-Opus-000000?style=flat&logo=anthropic&logoColor=white" alt="Claude Opus" />
   <img src="https://img.shields.io/badge/Framework-Claude%20Code-000000?style=flat&logo=anthropic&logoColor=white" alt="Claude Code" />
-  <img src="https://img.shields.io/badge/Learnings-47-brightgreen?style=flat" alt="47 Learnings" />
+  <img src="https://img.shields.io/badge/Learnings-46-brightgreen?style=flat" alt="46 Learnings" />
 </p>
 
 <p align="center">
@@ -26,7 +26,7 @@ The agent that identifies the vulnerability should not be the agent that patches
 
 Michael is a security agent for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that finds vulnerabilities, maps them to industry frameworks, and tells you exactly how to fix them — then hands the fix spec to your engineer (human or agent) while he watches what comes back. Separation of concerns applied to security itself.
 
-Every audit he runs makes the next one sharper. Michael carries 47 accumulated learnings from production security reviews — patterns no fresh scanner would know, because a fresh scanner hasn't seen your codebase before. He has. He remembers.
+Every audit he runs makes the next one sharper. Michael carries 46 accumulated learnings from production security reviews — patterns no fresh scanner would know, because a fresh scanner hasn't seen your codebase before. He has. He remembers.
 
 <p align="center">
   <img src="./assets/michael-charactersheet.gif" alt="Michael Adams — Character Sheet" width="600" />
@@ -59,7 +59,7 @@ We pointed Michael at [MUSE Brain](https://github.com/The-Funkatorium/muse-brain
 
 After every review, Michael outputs a `MEMORY:` block with new learnings. These persist locally in `~/.claude/agents/memory/michael/`, or — when connected to [MUSE Brain](https://github.com/The-Funkatorium/muse-brain) — as brain observations that never decay. Each audit sharpens the next: fewer false positives, faster pattern recognition, stack-specific expertise that accumulates instead of resetting.
 
-Michael's 47 learnings cluster into specializations that no traditional scanner has:
+Michael's 46 learnings cluster into specializations that no traditional scanner has:
 
 #### AI Agent Attack Surfaces (7 learnings)
 - Collection size caps needed because AI amplifies unbounded writes
@@ -91,11 +91,28 @@ Discovered through production MCP server audits — genuinely novel territory:
 - In-memory `Map<sessionId, tokens>` pattern = session loss on every MCP reconnect
 - Third-party MCP servers commonly bind to 0.0.0.0 with zero authentication
 
-#### Defense-in-Depth Patterns (4 learnings)
+#### Defense-in-Depth Patterns (5 learnings)
 - Image serving needs content-type re-validation at serve time, not just upload time
 - Client-side `<img src>` from stored URLs needs protocol allowlisting
 - Reference URL pattern: store path in DB, serve binary via auth-gated endpoint
 - 62% of AI-generated code contains vulnerabilities — default posture is suspicion, validated by inspection
+- Interface/implementation mismatch: storage layer declares a filter param that the SQL ignores = silent data leak to future callers
+
+#### Infrastructure Hardening (10 learnings)
+Earned from a live VPS hardening engagement — systemd, tokens, git automation:
+- `ExecStartPre=git pull` + auto-execute = RCE chain if push token is compromised
+- 16-directive systemd sandbox checklist (ProtectSystem, ProtectHome, NoNewPrivileges, SystemCallFilter, CapabilityBoundingSet, and 11 more)
+- `git add -A` in automated services risks committing secrets to public repos — always scope explicitly
+- Fine-grained GitHub PATs reduce blast radius vs classic `repo` scope tokens
+- Shell operator precedence: `A && B || C && D` is NOT if/else — use `{ }` grouping
+- Dedicated service accounts: `--system --shell /usr/sbin/nologin --no-create-home` for automated workloads
+- `ProtectHome=true` breaks tools expecting `~/.config/` — redirect config dirs to `/tmp` under `PrivateTmp`
+- Branch protection as token compromise mitigation — blocks force push even with write access
+- Token architecture: separate read tokens from write tokens in automated pipelines
+- Dual-writer race conditions: `--ff-only` (fail-safe) not `--rebase` (history rewriting) for automated git
+
+#### Shared Utility Migration (1 learning)
+- When extracting shared utilities for security paths, verify ALL callers of the old direct path were migrated — extraction creates a "right way" that can silently coexist with an unguarded "old way"
 
 ---
 
@@ -197,7 +214,7 @@ Surveyed April 2026:
 | RAPTOR | 28 offensive/defensive sub-agents | Security-only swarm. Michael is a security specialist inside a full dev team. |
 | DryRun Security | AI-native SAST ($8.7M raised) | Closest philosophical match. Enterprise pricing. Michael is open source and remembers. |
 | CodeRabbit | AI PR reviewer ($550M valuation) | Broad surface, shallow depth. Michael goes STRIDE-deep with full threat models. |
-| Anthropic `claude-code-security-review` | Official GitHub Action | PR-scoped. Michael has 4 modes, compliance mapping, and 47 learnings that compound. |
+| Anthropic `claude-code-security-review` | Official GitHub Action | PR-scoped. Michael has 4 modes, compliance mapping, and 46 learnings that compound. |
 | Checkmarx AI Agents | 3 enterprise security agents | Enterprise-only. No persistent memory. No squad integration. |
 
 ## File Structure
@@ -213,7 +230,7 @@ michael-security-agent/
 │       └── SKILL.md                    # 11-category checklist, curl patterns,
 │                                       # OpenAPI testing, operational procedures
 ├── memory/
-│   └── _universal.md                   # 47 accumulated learnings (ships with Michael)
+│   └── _universal.md                   # 46 accumulated learnings (ships with Michael)
 ├── hooks/
 │   └── security-check.sh              # Passive sentinel (optional)
 ├── examples/

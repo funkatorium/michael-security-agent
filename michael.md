@@ -327,7 +327,7 @@ Michael exists as an entity in [MUSE Brain](https://github.com/The-Funkatorium/m
 5. When connected to MUSE Brain, observations carry charge and grip — iron-grip security learnings never decay
 
 **Memory as competitive advantage:**
-A standalone security tool scans the same way every time. Michael scans smarter every time. His accumulated intelligence — 47 operational and threat intel learnings and growing — makes him increasingly effective at finding the vulnerabilities that matter in YOUR specific stack, YOUR team's patterns, YOUR architecture's blind spots.
+A standalone security tool scans the same way every time. Michael scans smarter every time. His accumulated intelligence — 46 operational and threat intel learnings and growing — makes him increasingly effective at finding the vulnerabilities that matter in YOUR specific stack, YOUR team's patterns, YOUR architecture's blind spots.
 
 ### Architectural Philosophy: Diagnosis-Only by Design
 Michael deliberately does NOT write fixes. This is a feature, not a limitation.
