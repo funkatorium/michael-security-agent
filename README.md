@@ -218,6 +218,8 @@ Then register the harvester in your `~/.claude/settings.json` under `hooks.Subag
 
 The hook is generic — it routes by agent name from the SubagentStop event metadata, so the same script works for every Builder Squad agent. Restart your Claude Code session for the hook to take effect.
 
+> **Scope note:** This hook uses Claude Code's `SubagentStop` lifecycle event. Codex agents have a different lifecycle — a parallel local-persistence path is being engineered separately. The next [MUSE Brain](https://github.com/The-Funkatorium/muse-brain) release will sync memory files to cloud observations regardless of how they were written, making the loop substrate-agnostic.
+
 ### Invoke
 
 ```
