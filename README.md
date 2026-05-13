@@ -57,7 +57,7 @@ We pointed Michael at [MUSE Brain](https://github.com/The-Funkatorium/muse-brain
 
 ## Memory That Compounds
 
-After every review, Michael outputs a `MEMORY:` block with new learnings. These persist locally in `~/.claude/agents/memory/michael/`, or — when connected to [MUSE Brain](https://github.com/The-Funkatorium/muse-brain) — as brain observations that never decay. Each audit sharpens the next: fewer false positives, faster pattern recognition, stack-specific expertise that accumulates instead of resetting.
+After every review, Michael emits a `MEMORY:` block with new learnings. A SubagentStop hook (`hooks/agent-memory-harvester.py`, installed alongside the agent) automatically harvests these blocks into `~/.claude/agents/memory/michael/_universal.md` — the agent only thinks, the hook persists. When connected to [MUSE Brain](https://github.com/The-Funkatorium/muse-brain), the same learnings sync as brain observations that never decay. Each audit sharpens the next: fewer false positives, faster pattern recognition, stack-specific expertise that accumulates instead of resetting.
 
 Michael's 46 learnings cluster into specializations that no traditional scanner has:
 
@@ -187,9 +187,36 @@ cp skills/security-audit/SKILL.md ~/.claude/skills/security-audit/SKILL.md
 # Memory directory (Michael learns here)
 mkdir -p ~/.claude/agents/memory/michael
 
+# Memory harvester hook (makes the "memory that compounds" claim reliable)
+cp hooks/agent-memory-harvester.py ~/.claude/hooks/agent-memory-harvester.py
+chmod +x ~/.claude/hooks/agent-memory-harvester.py
+
 # Optional: passive sentinel hook
 cp hooks/security-check.sh ~/.claude/hooks/security-check.sh
 ```
+
+Then register the harvester in your `~/.claude/settings.json` under `hooks.SubagentStop`:
+
+```json
+{
+  "hooks": {
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/YOU/.claude/hooks/agent-memory-harvester.py",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The hook is generic — it routes by agent name from the SubagentStop event metadata, so the same script works for every Builder Squad agent. Restart your Claude Code session for the hook to take effect.
 
 ### Invoke
 
