@@ -8,16 +8,71 @@ lines from the agent's text output, dedupes against the existing
 memory file, and appends new entries.
 
 Always exits 0 — a memory write failure must never block a session.
+
+AUTO-PUSH (opt-in)
+------------------
+After writing new learnings the hook can auto-commit and push the memory
+repository to a configured private git remote. This is disabled by default.
+
+To enable, set AGENT_MEMORY_AUTOPUSH=1 before Claude Code launches, and make
+~/.claude/agents/memory a git repo with origin/main pointing at your private
+learning repo. If git, credentials, or the repo are missing, the hook skips the
+push and still exits 0.
 """
 import fcntl
 import json
 import os
 import re
+import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 MEMORY_LINE = re.compile(r'^- \[20\d{2}-\d{2}-\d{2}\].+$', re.MULTILINE)
 AGENT_PATH = re.compile(r'agents/memory/([a-z][a-z0-9_-]+)/_universal\.md')
+MEMORY_DIR = Path.home() / '.claude' / 'agents' / 'memory'
+
+
+def git_autopush(memory_file: Path) -> None:
+    """Fire-and-forget commit/push for the private agent-memory repo.
+
+    Security posture: disabled by default; stages only the memory file that was
+    just written, not arbitrary files in the repo. All failures are swallowed so
+    memory persistence never blocks or breaks the agent pipeline.
+    """
+    if os.environ.get('AGENT_MEMORY_AUTOPUSH') != '1':
+        return
+    if not (MEMORY_DIR / '.git').is_dir():
+        return
+
+    try:
+        rel_path = memory_file.relative_to(MEMORY_DIR)
+    except ValueError:
+        return
+
+    timestamp = datetime.now(tz=timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+    commit_msg = f'auto: agent learning {rel_path} {timestamp}'
+
+    # Detached child process keeps SubagentStop latency low. We intentionally
+    # stage only the touched file; Michael's own learning says automated
+    # `git add -A` is how secrets end up in the wrong place.
+    cmd = (
+        f'cd {str(MEMORY_DIR)!r} && '
+        f'git add -- {str(rel_path)!r} && '
+        f'if git diff --cached --quiet -- {str(rel_path)!r}; then '
+        f'exit 0; '
+        f'else git commit -m {commit_msg!r} && git push origin main; '
+        f'fi'
+    )
+    try:
+        subprocess.Popen(
+            ['sh', '-c', cmd],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except Exception as exc:  # pragma: no cover — never block on push failure
+        print(f'[memory-harvester] autopush skipped: {exc}', file=sys.stderr)
 
 
 def resolve_agent_name(transcript_path, text_fallback):
@@ -90,7 +145,7 @@ def main() -> None:
     if not agent:
         return
 
-    memory_file = Path.home() / '.claude' / 'agents' / 'memory' / agent / '_universal.md'
+    memory_file = MEMORY_DIR / agent / '_universal.md'
     if not memory_file.exists():
         return
 
@@ -125,6 +180,8 @@ def main() -> None:
         f'[memory-harvester] {agent}: appended {len(new_entries)} learning(s)',
         file=sys.stderr,
     )
+
+    git_autopush(memory_file)
 
 
 if __name__ == '__main__':

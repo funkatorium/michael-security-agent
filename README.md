@@ -40,7 +40,7 @@ Every audit he runs makes the next one sharper. Michael carries 46 accumulated l
 
 ## Proof of Work
 
-We pointed Michael at [MUSE Brain](https://github.com/The-Funkatorium/muse-brain) — the memory system that powers his own learning — and published everything. Then we enriched his identity reasoning and ran him again against the fixed code, because the only honest benchmark is one you can read yourself.
+We pointed Michael at [MUSE Brain](https://github.com/funkatorium/muse-brain) — the memory system that powers his own learning — and published everything. Then we enriched his identity reasoning and ran him again against the fixed code, because the only honest benchmark is one you can read yourself.
 
 | | Run 1 (Baseline) | Run 2 (Enriched) |
 |---|---|---|
@@ -57,7 +57,7 @@ We pointed Michael at [MUSE Brain](https://github.com/The-Funkatorium/muse-brain
 
 ## Memory That Compounds
 
-After every review, Michael emits a `MEMORY:` block with new learnings. A SubagentStop hook (`hooks/agent-memory-harvester.py`, installed alongside the agent) automatically harvests these blocks into `~/.claude/agents/memory/michael/_universal.md` — the agent only thinks, the hook persists. When connected to [MUSE Brain](https://github.com/The-Funkatorium/muse-brain), the same learnings sync as brain observations that never decay. Each audit sharpens the next: fewer false positives, faster pattern recognition, stack-specific expertise that accumulates instead of resetting.
+After every review, Michael emits a `MEMORY:` block with new learnings. A SubagentStop hook (`hooks/agent-memory-harvester.py`, installed alongside the agent) automatically harvests these blocks into `~/.claude/agents/memory/michael/_universal.md` — the agent only thinks, the hook persists. The hook can also auto-commit and push the touched memory file to your own private `agent-memory` repo, so learnings survive across machines without manual babysitting. When connected to [MUSE Brain](https://github.com/funkatorium/muse-brain), those same learnings sync as brain observations that never decay. Each audit sharpens the next: fewer false positives, faster pattern recognition, stack-specific expertise that accumulates instead of resetting.
 
 Michael's 46 learnings cluster into specializations that no traditional scanner has:
 
@@ -218,7 +218,33 @@ Then register the harvester in your `~/.claude/settings.json` under `hooks.Subag
 
 The hook is generic — it routes by agent name from the SubagentStop event metadata, so the same script works for every Builder Squad agent. Restart your Claude Code session for the hook to take effect.
 
-> **Scope note:** This hook uses Claude Code's `SubagentStop` lifecycle event. Codex agents have a different lifecycle — a parallel local-persistence path is being engineered separately. The next [MUSE Brain](https://github.com/The-Funkatorium/muse-brain) release will sync memory files to cloud observations regardless of how they were written, making the loop substrate-agnostic.
+### Optional: private learning autopush
+
+For durable cloud sync, make `~/.claude/agents/memory` its own git repo with a private remote, then enable autopush in the hook command:
+
+```bash
+mkdir -p ~/.claude/agents/memory/michael
+cd ~/.claude/agents/memory
+
+git init
+git branch -M main
+git remote add origin git@github.com:YOUR_ORG/agent-memory.git
+
+touch michael/_universal.md
+git add michael/_universal.md
+git commit -m "init: michael agent memory"
+git push -u origin main
+```
+
+Then update the hook command:
+
+```json
+"command": "AGENT_MEMORY_AUTOPUSH=1 python3 /Users/YOU/.claude/hooks/agent-memory-harvester.py"
+```
+
+Autopush is fire-and-forget: if git is unavailable, credentials are missing, or there is nothing new to commit, the hook skips the push and never blocks the agent pipeline. It stages only the touched memory file, not arbitrary files. Full setup: [Agent Memory Autopush](docs/AGENT_MEMORY_AUTOPUSH.md).
+
+> **Scope note:** This hook uses Claude Code's `SubagentStop` lifecycle event. Codex agents have a different lifecycle, but they write to the same private `agent-memory` substrate once configured. MUSE Brain's Agent Learning Bridge then ingests those memory files as cloud observations, making the loop substrate-agnostic.
 
 ### Invoke
 
@@ -231,7 +257,7 @@ Or let your orchestrator dispatch Michael automatically when security-relevant w
 
 ### With MUSE Brain (Recommended)
 
-Michael learns locally by default. For cloud-based persistent memory that survives across machines, connect him to [MUSE Brain](https://github.com/The-Funkatorium/muse-brain) (CC-BY-NC-SA 4.0). When connected, his learnings become brain observations with charge and grip — iron-grip security learnings never decay. The integration is documented in the agent spec (`michael.md` → Brain Entity Integration).
+Michael learns locally by default. For cloud-based persistent memory that survives across machines, connect him to [MUSE Brain](https://github.com/funkatorium/muse-brain) (CC-BY-NC-SA 4.0). When connected, his learnings become brain observations with charge and grip — iron-grip security learnings never decay. The integration is documented in the agent spec (`michael.md` → Brain Entity Integration).
 
 ## Competitive Landscape
 
@@ -261,7 +287,10 @@ michael-security-agent/
 ├── memory/
 │   └── _universal.md                   # 46 accumulated learnings (ships with Michael)
 ├── hooks/
-│   └── security-check.sh              # Passive sentinel (optional)
+│   ├── agent-memory-harvester.py       # SubagentStop memory harvester + optional autopush
+│   └── security-check.sh               # Passive sentinel (optional)
+├── docs/
+│   └── AGENT_MEMORY_AUTOPUSH.md        # Private learning repo setup
 ├── examples/
 │   ├── audit-muse-brain.md      # Run 1: baseline audit (pre-enrichment)
 │   ├── audit-muse-brain-run2.md # Run 2: enriched audit (post-fix)
@@ -285,4 +314,4 @@ Built by [Rook Schäfer](https://github.com/The-Funkatorium) and [Falco Schäfer
 
 **Michael Adams as a character** (identity, personality, voice, lore, visual assets) — proprietary, protected under German intellectual property law as a literary character. You can use Michael as shipped. You cannot create derivative characters based on his identity.
 
-[MUSE Brain](https://github.com/The-Funkatorium/muse-brain) is CC-BY-NC-SA 4.0.
+[MUSE Brain](https://github.com/funkatorium/muse-brain) is CC-BY-NC-SA 4.0.
