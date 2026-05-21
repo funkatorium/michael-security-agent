@@ -133,7 +133,7 @@ def main() -> None:
     except (json.JSONDecodeError, ValueError):
         return
 
-    transcript = payload.get('transcript_path')
+    transcript = payload.get('agent_transcript_path') or payload.get('transcript_path')
     if not transcript or not os.path.exists(transcript):
         return
 
